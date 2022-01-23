@@ -15,6 +15,7 @@ namespace BasicWebServer.Server.HTTP
         {
             cookies = new Dictionary<string, Cookie>();
         }
+              
 
         public string this[string name] => cookies[name].Value;
 

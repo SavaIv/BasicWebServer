@@ -1,0 +1,12 @@
+C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Server\bin\Release\net6.0\BasicWebServer.Server.deps.json
+C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Server\bin\Release\net6.0\BasicWebServer.Server.dll
+C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Server\bin\Release\net6.0\ref\BasicWebServer.Server.dll
+C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Server\bin\Release\net6.0\BasicWebServer.Server.pdb
+C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Server\obj\Release\net6.0\BasicWebServer.Server.csproj.AssemblyReference.cache
+C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Server\obj\Release\net6.0\BasicWebServer.Server.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Server\obj\Release\net6.0\BasicWebServer.Server.AssemblyInfoInputs.cache
+C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Server\obj\Release\net6.0\BasicWebServer.Server.AssemblyInfo.cs
+C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Server\obj\Release\net6.0\BasicWebServer.Server.csproj.CoreCompileInputs.cache
+C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Server\obj\Release\net6.0\BasicWebServer.Server.dll
+C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Server\obj\Release\net6.0\ref\BasicWebServer.Server.dll
+C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Server\obj\Release\net6.0\BasicWebServer.Server.pdb

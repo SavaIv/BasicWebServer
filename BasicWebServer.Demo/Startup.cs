@@ -42,7 +42,11 @@ namespace BasicWebServer.Demo
 
         private static void AddCookiesAction(Request request, Response response)
         {
-            var requestHasCookies = request.Cookies.Any();
+            var requestHasCookies = request.Cookies.Any(c => c.Name != Session.SessionCookieName);
+            // c => c.Name != Session.SessionCookieName   <-- This is necessary because otherwise the session cookie
+            //                                                 will prevent the creation of other cookies. 
+
+
             var bodyText = "";
 
             // If we have any cookies from the response, we should display them in HTML format.
@@ -77,6 +81,8 @@ namespace BasicWebServer.Demo
                 response.Cookies.Add("My-Cookie", "My-Value");
                 response.Cookies.Add("My-Second-Cookie", "My-Second-Value");
             }
+
+            response.Body = bodyText;
         }
 
         // ето така we can add an action to be executed before the response is returned

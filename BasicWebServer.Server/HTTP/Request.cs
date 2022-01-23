@@ -5,6 +5,9 @@ namespace BasicWebServer.Server.HTTP
 {
     public class Request
     {
+        // колекиция от сесиите на юзърите, които в момента са конектнати на сървъра
+        private static Dictionary<string, Session> Sessions = new ();
+
         public Method Method { get; private set; }
 
         public string Url { get; private set; }
@@ -14,6 +17,8 @@ namespace BasicWebServer.Server.HTTP
         public CookieCollection Cookies { get; set; }
 
         public string Body { get; private set; }
+
+        public Session Session { get; private set; }
 
         // this is a field for the form data, which should be a dictionary holding key-value pairs
         // for the name and value of each form field
@@ -33,6 +38,9 @@ namespace BasicWebServer.Server.HTTP
             // ще подадем headers, които са прясно парснати на горния ред (кукитата се съдържат в хедърите)
             var cookies = ParseCookies(headers);
 
+            // трябва ни сесията
+            var session = GetSession(cookies);
+
             var bodyLines = lines.Skip(headers.Count + 2).ToArray();
 
             var body = string.Join("\r\n", bodyLines);
@@ -46,8 +54,25 @@ namespace BasicWebServer.Server.HTTP
                 Headers = headers,
                 Cookies = cookies,
                 Body = body,
+                Session = session,
                 Form = form
             };
+        }
+
+        private static Session GetSession(CookieCollection cookies)
+        {
+            // проверчване дали в куки колекцията имаме такива сесийно ИД
+            var sessionId = cookies.Contains(Session.SessionCookieName)
+                ? cookies[Session.SessionCookieName]
+                : Guid.NewGuid().ToString();
+
+            // проверяваме в колекцията със сесийни ИД-та дали имаме това ИД
+            if (!Sessions.ContainsKey(sessionId))
+            {
+                Sessions[sessionId] = new Session(sessionId);
+            }
+
+            return Sessions[sessionId];
         }
 
         private static CookieCollection ParseCookies(HeaderCollection headers)

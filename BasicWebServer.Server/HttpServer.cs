@@ -80,7 +80,7 @@ namespace BasicWebServer.Server
             while (true)
             {
                 var connection = await serverListener.AcceptTcpClientAsync();
-                                
+
                 _ = Task.Run(async () =>
                 {
                     var networkStream = connection.GetStream();
@@ -100,11 +100,28 @@ namespace BasicWebServer.Server
                     if (response.PreRenderAction != null)
                         response.PreRenderAction(request, response);
 
+                    // the session should be part of each response to the browser, затова:
+                    AddSession(request, response);
+
                     // този метод е асинхронен (виж по-долу. Mоже би беше добре в името на метода да има "Async". За яснота)
                     await WriteResponse(networkStream, response);
 
                     connection.Close();
                 });
+            }
+        }
+
+        private void AddSession(Request request, Response response)
+        {
+            bool sessionExists = request.Session.ContainsKey(Session.SessionCurrentDateKey);
+
+            if (!sessionExists)
+            {
+                // if the session doesn't not exist, create one with the current date and add it to the request to save it.
+                request.Session[Session.SessionCurrentDateKey] = DateTime.Now.ToString();
+                
+                // Also, add a cookie to the response with the session cookie name as name and the session ID as value:
+                response.Cookies.Add(Session.SessionCookieName, request.Session.Id);
             }
         }
 
