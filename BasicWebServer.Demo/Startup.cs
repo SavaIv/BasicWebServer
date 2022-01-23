@@ -1,6 +1,8 @@
 ﻿using BasicWebServer.Server;
 using BasicWebServer.Server.HTTP;
 using BasicWebServer.Server.Responses;
+using System.Text;
+using System.Web;
 
 namespace BasicWebServer.Demo
 {
@@ -32,15 +34,54 @@ namespace BasicWebServer.Demo
                 .MapGet("/HTML", new HtmlResponse(Startup.HtmlForm))                
                 .MapPost("/HTML", new TextResponse("", Startup.AddFormDataAction))
                 .MapGet("/Content", new HtmlResponse(Startup.DownloadForm))
-                .MapPost("/Content", new TextResponse(Startup.FileName)));
+                .MapPost("/Content", new TextFileResponse(Startup.FileName))
+                .MapGet("/Cookies", new HtmlResponse("", Startup.AddCookiesAction)));
                 
             await server.Start();
         }
 
+        private static void AddCookiesAction(Request request, Response response)
+        {
+            var requestHasCookies = request.Cookies.Any();
+            var bodyText = "";
+
+            // If we have any cookies from the response, we should display them in HTML format.
+            // If there aren't any, show the "No cookies yet!" message.
+            // Modify the response body to change the response content:
+
+            if (requestHasCookies)
+            {
+                var cookieText = new StringBuilder();
+                cookieText.AppendLine("<h1>Cookies</h1>");
+
+                cookieText.Append("<table border='1'><tr><th>Name</th><th>Value</th></tr>");
+
+                foreach (var cookie in request.Cookies)
+                {
+                    cookieText.Append("<tr>");
+                    cookieText.Append($"<td>{HttpUtility.HtmlEncode(cookie.Name)}</td>");
+                    cookieText.Append($"<td>{HttpUtility.HtmlEncode(cookie.Value)}</td>");
+                    cookieText.Append("</tr>");
+                }
+                cookieText.Append("</table>");
+
+                bodyText = cookieText.ToString();
+            }
+            else
+            {
+                bodyText = "<h1>Cookies set!</h1>";
+            }
+
+            if (!requestHasCookies)
+            {
+                response.Cookies.Add("My-Cookie", "My-Value");
+                response.Cookies.Add("My-Second-Cookie", "My-Second-Value");
+            }
+        }
+
         // ето така we can add an action to be executed before the response is returned
         // т.е. we will add the form data to the response body:
-        private static void AddFormDataAction(
-            Request request, Response response)
+        private static void AddFormDataAction(Request request, Response response)
         {
             response.Body = "";
 

@@ -16,6 +16,8 @@ namespace BasicWebServer.Server.HTTP
 
         public HeaderCollection Headers { get; } = new HeaderCollection();
 
+        public CookieCollection Cookies { get; } = new CookieCollection();
+
         public string Body { get; set; }
 
         // this will allow the action to be executed in the response (this is the first step. second see ContentRespose class)
@@ -33,6 +35,11 @@ namespace BasicWebServer.Server.HTTP
             foreach (var header in this.Headers)
             {
                 result.AppendLine(header.ToString());
+            }
+
+            foreach (var cookie in Cookies)
+            {
+                result.AppendLine($"{Header.SetCookie}: {cookie}");
             }
 
             result.AppendLine();

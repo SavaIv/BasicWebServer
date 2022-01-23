@@ -11,6 +11,8 @@ namespace BasicWebServer.Server.HTTP
 
         public HeaderCollection Headers { get; private set; }
 
+        public CookieCollection Cookies { get; set; }
+
         public string Body { get; private set; }
 
         // this is a field for the form data, which should be a dictionary holding key-value pairs
@@ -28,6 +30,9 @@ namespace BasicWebServer.Server.HTTP
 
             var headers = ParseHeaders(lines.Skip(1));
 
+            // ще подадем headers, които са прясно парснати на горния ред (кукитата се съдържат в хедърите)
+            var cookies = ParseCookies(headers);
+
             var bodyLines = lines.Skip(headers.Count + 2).ToArray();
 
             var body = string.Join("\r\n", bodyLines);
@@ -39,9 +44,33 @@ namespace BasicWebServer.Server.HTTP
                 Method = method,
                 Url = url,
                 Headers = headers,
+                Cookies = cookies,
                 Body = body,
                 Form = form
             };
+        }
+
+        private static CookieCollection ParseCookies(HeaderCollection headers)
+        {
+            var cookieCollection = new CookieCollection();
+
+            if (headers.Contains(Header.Cookie))
+            {
+                var cookieHeader = headers[Header.Cookie];
+                var allCookies = cookieHeader.Split(';', StringSplitOptions.RemoveEmptyEntries);
+                
+                foreach (var cookieText in allCookies)
+                {
+                    var cookieParts = cookieText.Split('=', StringSplitOptions.RemoveEmptyEntries);
+
+                    var cookieName = cookieParts[0].Trim();
+                    var cookieValue = cookieParts[1].Trim();
+
+                    cookieCollection.Add(cookieName, cookieValue);
+                }
+            }
+
+            return cookieCollection;
         }
 
         // метода следва да върне collection of form data pairs
@@ -93,7 +122,7 @@ namespace BasicWebServer.Server.HTTP
                     throw new InvalidOperationException("Request is not valid.");
                 }
 
-                var headerName = headerParts[0];
+                var headerName = headerParts[0].Trim();
                 var headerValue = headerParts[1].Trim();
 
                 headerCollection.Add(headerName, headerValue);
