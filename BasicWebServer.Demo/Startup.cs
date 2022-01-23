@@ -23,6 +23,16 @@ namespace BasicWebServer.Demo
 
         private const string FileName = "content.txt";
 
+        private const string LoginForm = @"<form action='/Login' method='POST'>
+            Username: <input type='text' name='Username'/>
+            Password: <input type='text' name='Password'/>
+            <input type='submit' value ='Log In' /> 
+        </form>";
+
+        private const string Username = "user";
+
+        private const string Password = "user123";
+
         public static async Task Main()
         {
             await DownloadSitesAsTextFile(Startup.FileName,
@@ -35,9 +45,31 @@ namespace BasicWebServer.Demo
                 .MapPost("/HTML", new TextResponse("", Startup.AddFormDataAction))
                 .MapGet("/Content", new HtmlResponse(Startup.DownloadForm))
                 .MapPost("/Content", new TextFileResponse(Startup.FileName))
-                .MapGet("/Cookies", new HtmlResponse("", Startup.AddCookiesAction)));
+                .MapGet("/Cookies", new HtmlResponse("", Startup.AddCookiesAction))
+                .MapGet("/Session", new TextResponse("", Startup.DisplaySessionInfoAction))
+                .MapGet("/Login", new HtmlResponse(Startup.LoginForm)));
                 
             await server.Start();
+        }
+
+        private static void DisplaySessionInfoAction(Request request, Response response)
+        {
+            var sessionExists = request.Session.ContainsKey(Session.SessionCurrentDateKey);
+
+            var bodyText = "";
+
+            if (sessionExists)
+            {
+                var currentDate = request.Session[Session.SessionCurrentDateKey];
+                bodyText = $"Stored date: {currentDate}!";
+            }
+            else
+            {
+                bodyText = "Current date stored!";
+            }
+
+            response.Body = "";
+            response.Body = bodyText;
         }
 
         private static void AddCookiesAction(Request request, Response response)
