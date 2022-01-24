@@ -31,5 +31,7 @@ namespace BasicWebServer.Server.HTTP
         }
 
         public bool ContainsKey(string key) => data.ContainsKey(key);
+
+        public void Clear() => data.Clear();
     }
 }

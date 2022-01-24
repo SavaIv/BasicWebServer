@@ -41,16 +41,70 @@ namespace BasicWebServer.Demo
             var server = new HttpServer(routes => routes
                 .MapGet("/", new TextResponse("Hello from the server!"))
                 .MapGet("/Redirect", new RedirectResponse("https://softuni.org/"))
-                .MapGet("/HTML", new HtmlResponse(Startup.HtmlForm))                
+                .MapGet("/HTML", new HtmlResponse(Startup.HtmlForm))
                 .MapPost("/HTML", new TextResponse("", Startup.AddFormDataAction))
                 .MapGet("/Content", new HtmlResponse(Startup.DownloadForm))
                 .MapPost("/Content", new TextFileResponse(Startup.FileName))
                 .MapGet("/Cookies", new HtmlResponse("", Startup.AddCookiesAction))
                 .MapGet("/Session", new TextResponse("", Startup.DisplaySessionInfoAction))
-                .MapGet("/Login", new HtmlResponse(Startup.LoginForm)));
-                
+                .MapGet("/Login", new HtmlResponse(Startup.LoginForm))
+                .MapPost("/Login", new HtmlResponse("", Startup.LoginAction))
+                .MapGet("/Logout", new HtmlResponse("", Startup.LogoutAction))
+                .MapGet("/UserProfile", new HtmlResponse("", Startup.GetUserDataAction)));            
+
             await server.Start();
         }
+
+        private static void GetUserDataAction(Request request, Response response)
+        {
+            if (request.Session.ContainsKey(Session.SessionUserKey))
+            {
+                response.Body = "";
+                response.Body += $"<h3>Currently logged-in user " + $"is with username '{Username}'</h3>";
+            }
+            else
+            {
+                response.Body = "";
+                response.Body += $"<h3>You should first log in " + "- <a href='/Login'>Login</a></h3>";
+            }
+        }
+
+        private static void LogoutAction(Request request, Response response)
+        {
+            request.Session.Clear();
+            
+            response.Body = "";
+            response.Body += "<h3>Logged out successfully!</h3>";
+        }
+
+        private static void LoginAction(Request request, Response response)
+        {
+            request.Session.Clear();
+
+            //var testSessionBeforeLogin = request.Session;
+
+            var bodyText = "";
+
+            var usernameMatches = request.Form["Username"] == Startup.Username;
+            var passwordMatches = request.Form["Password"] == Startup.Password;
+
+            if (usernameMatches && passwordMatches)
+            {
+                request.Session[Session.SessionUserKey] = "MyUserId";
+                response.Cookies.Add(Session.SessionCookieName, request.Session.Id);
+
+                bodyText = "<h3>Logged successfully!</h3>";
+
+                //var testSessionAfterLogin = request.Session;
+            }
+            else
+            {
+                bodyText = Startup.LoginForm;
+            }
+
+            response.Body = "";
+            response.Body += bodyText;
+        }        
 
         private static void DisplaySessionInfoAction(Request request, Response response)
         {
