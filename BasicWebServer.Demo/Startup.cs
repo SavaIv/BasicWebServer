@@ -35,6 +35,8 @@ namespace BasicWebServer.Demo
 
         public static async Task Main()
         {
+            // Напрактика още със стартирането на сървъра се изпълнява този метод т.е. изтегля си информация от 
+            // двата сайта и се "напълва" File
             await DownloadSitesAsTextFile(Startup.FileName,
                 new string[] { "https://judge.softuni.org/", "https://softuni.org/" });
 
@@ -215,6 +217,8 @@ namespace BasicWebServer.Demo
         private static async Task DownloadSitesAsTextFile(string filename, string[] urls)
         {
             // a collection of type Task<string>, which holds the tasks for getting the HTML content from the sites
+            // свалянето е асинхронно. в Лист-а ще добавяме Таскове. Забележи, че отпред няма await (въпреки, че мотода е async)
+            // изчакването на тези Такове става при var responses = await Task.WhenAll(downloads); (след foreach-a)
             var downloads = new List<Task<string>>();
 
             foreach (var url in urls)
@@ -223,7 +227,8 @@ namespace BasicWebServer.Demo
             }
 
             // Wait for all tasks to be executed together (in parallel) and get the result like this:
-            var responses = await Task.WhenAll(downloads);
+            // WhenAll - значи, че ще изчакаме да приключат всички Таскове, които са е Лист-а (downloads e Лист)
+            string[] responses = await Task.WhenAll(downloads);    
 
             // Join all the content from the responses in a way you want and get the result.
             var responsesString = string.Join(Environment.NewLine + new String('-', 100), responses);

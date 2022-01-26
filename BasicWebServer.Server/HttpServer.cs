@@ -14,10 +14,7 @@ namespace BasicWebServer.Server
 
         private readonly RoutingTable routingTable;
 
-        public HttpServer
-            (string ipAddress,
-            int port,
-            Action<IRoutingTable> routingTableConfiguration)
+        public HttpServer (string ipAddress, int port, Action<IRoutingTable> routingTableConfiguration)
         {
             this.ipAddress = IPAddress.Parse(ipAddress);
             this.port = port;
@@ -86,14 +83,23 @@ namespace BasicWebServer.Server
                     var networkStream = connection.GetStream();
 
                     // ReadRequest е асинхронен (виж по-долу. Mоже би беше добре в името на метода да има "Async". За яснота)
+                    // прочитаме стрийма и си вземаме рекуеста
                     var requestText = await this.ReadRequest(networkStream);
 
                     Console.WriteLine(requestText);
 
+                    // парсваме си рикуеста
                     var request = Request.Parse(requestText);
 
+                    // мап-ваме ресонса с routing table-a 
                     var response = this.routingTable.MatchRequest(request);
 
+                    // ако респонса съдържа pre-render action той ще бъде изпълнен преди да бъде върнат към клиента
+                    // т.е. след като респонса е вече готов -> може да искаме да добавим нещо допълнително към респонса
+                    // Виж Routong таблицата (в Startup.cs) -> Напрактика втория параметър в скобите е именно пре-рендър
+                    // това са екшъните -> виж видeото на Стамо, първия WorkShop 0:55:40
+                    // Напрактика рутинг таблицата е "проста" - винаги връща празен стринг "", а с някой екшън ние 
+                    // правим конкретната работа - тези екшъни са т.н. pre-renders
                     // Execute pre-render action for the response
                     // виж пропъртито public Action<Request, Response> PreRenderAction { get; protected set; }
                     // в класа response

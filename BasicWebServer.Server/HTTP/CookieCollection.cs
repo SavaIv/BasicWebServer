@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace BasicWebServer.Server.HTTP
 {
+    // IEnumerable<Cookie> има за цел да усигури, Cookie-тата да можем да ги foreach-ваме
     public class CookieCollection : IEnumerable<Cookie>
     {
         private readonly Dictionary<string, Cookie> cookies;
@@ -20,6 +21,7 @@ namespace BasicWebServer.Server.HTTP
         public string this[string name] => cookies[name].Value;
 
         public void Add(string name, string value) => cookies[name] = new Cookie(name, value);
+        // добавяме ново куким, където ключа е: cookies[name], а value-то е: new Cookie(name, value)
 
         public bool Contains(string name) => cookies.ContainsKey(name);
 
