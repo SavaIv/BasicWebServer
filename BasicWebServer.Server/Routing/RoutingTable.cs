@@ -6,7 +6,7 @@ namespace BasicWebServer.Server.Routing
 {
     public class RoutingTable : IRoutingTable
     {
-        private readonly Dictionary<Method, Dictionary<string, Response>> routes;
+        private readonly Dictionary<Method, Dictionary<string, Func<Request, Response>>> routes;
 
         //public RoutingTable() =>
         //    this.routes = new Dictionary<Method, Dictionary<string, Response>>()
@@ -26,33 +26,23 @@ namespace BasicWebServer.Server.Routing
             [Method.Delete] = new(StringComparer.InvariantCultureIgnoreCase)
         };
 
-        public IRoutingTable Map(string url, Method method, Response response) => method switch
+        public IRoutingTable Map(Method method, string path, Func<Request, Response> responseFunction)
         {
-            Method.Get => this.MapGet(url, response),
-            Method.Post => this.MapPost(url, response),
-            _ => throw new InvalidOperationException(
-                $"Method '{method}' is not supported.")
-        };
+            Guard.AgainstNull(path, nameof(path));
+            Guard.AgainstNull(responseFunction, nameof(responseFunction));
 
-        public IRoutingTable MapGet(string url, Response response)
-        {
-            Guard.AgainstNull(url, nameof(url));
-            Guard.AgainstNull(response, nameof(response));
+            routes[method][path] = responseFunction;
 
-            this.routes[Method.Get][url] = response;
-
+            // return the current IRoutingTable instance т.е. връща целия клас (RoutingTable)
             return this;
         }
 
-        public IRoutingTable MapPost(string url, Response response)
-        {
-            Guard.AgainstNull(url, nameof(url));
-            Guard.AgainstNull(response, nameof(response));
+        public IRoutingTable MapGet(string path, Func<Request, Response> responseFunction)
+            => Map(Method.Get, path, responseFunction);
 
-            this.routes[Method.Post][url] = response;
 
-            return this;
-        }
+        public IRoutingTable MapPost(string path, Func<Request, Response> responseFunction)
+            => Map(Method.Post, path, responseFunction);
 
         public Response MatchRequest(Request request)
         {
@@ -65,7 +55,15 @@ namespace BasicWebServer.Server.Routing
                 return new NotFoundResponse();
             }
 
-            return this.routes[requestMethod][requestUrl];
+            // трябва да върнем Response, но този респонс, трябва да бъде намерен по някъкъв начин. Какво правим в този случай?
+            //  - имаме делгат responseFunction в който записваме съответния раут --> ще трябва да си извадим този делегат
+            var responseFunction = routes[requestMethod][requestUrl];
+            // изкарали сме си функцията - var-a e делегат, който е Func от нещоСи
+            // това, което се иска обаче е да върнем респонс. Правим го така:          
+            return responseFunction(request);
+            // това е така, защото делегата (Func<Request, Response>), получва като параметър Request и връща като 
+            // резултат респонс
+            // ????? тук нещо невдянах защо трябва да се подаде (request)
         }
     }
 }

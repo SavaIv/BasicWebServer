@@ -15,6 +15,6 @@ namespace BasicWebServer.Demo.Controllers
         }
 
         // .MapGet("/", new TextResponse("Hello from the server!"))
-        //public Response Index() => Text("Hello from the server!");
+        public Response Index() => Text("Hello from the server!");
     }
 }
