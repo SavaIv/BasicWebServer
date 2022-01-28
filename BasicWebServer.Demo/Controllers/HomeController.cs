@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Web;
 
 namespace BasicWebServer.Demo.Controllers
 {
@@ -53,6 +54,47 @@ namespace BasicWebServer.Demo.Controllers
 
             return File(HomeController.FileName);
         }
+        public Response Cookies()
+        {
+            if (Request.Cookies.Any(c => c.Name != BasicWebServer.Server.HTTP.Session.SessionCookieName))
+            {
+                var cookieText = new StringBuilder();
+                cookieText.AppendLine("<h1>Cookies</h1>");
+
+                cookieText.Append("<table border='1'><tr><th>Name</th><th>Value</th></tr>");
+
+                foreach (var cookie in Request.Cookies)
+                {
+                    cookieText.Append("<tr>");
+                    cookieText.Append($"<td>{HttpUtility.HtmlEncode(cookie.Name)}</td>");
+                    cookieText.Append($"<td>{HttpUtility.HtmlEncode(cookie.Value)}</td>");
+                    cookieText.Append("</tr>");
+                }
+                cookieText.Append("</table>");
+
+                return Html(cookieText.ToString());
+            }
+
+            var cookies = new CookieCollection();
+            cookies.Add("My-Cookie", "My-Value");
+            cookies.Add("My-Second-Cookie", "My-Second-Value");
+            
+            return Html("<h1>Cookies set!</h1>", cookies);            
+        }
+        public Response Session()
+        {
+            string CurrentDateKey = "CurrentDate";
+            var sessionExists = Request.Session.ContainsKey(CurrentDateKey);
+               
+            if (sessionExists)
+            {
+                var currentDate = Request.Session[CurrentDateKey];
+
+                return Text($"Stored date: {currentDate}!");
+            }            
+
+            return Text("Current date stored!");
+        }
 
 
         // the DownloadWebSiteContent(string url) method, which should get the first 2000 symbols
@@ -76,7 +118,7 @@ namespace BasicWebServer.Demo.Controllers
             }
         }
 
-        
+
         private static async Task DownloadSitesAsTextFile(string filename, string[] urls)
         {
             // a collection of type Task<string>, which holds the tasks for getting the HTML content from the sites
@@ -103,7 +145,7 @@ namespace BasicWebServer.Demo.Controllers
             var responsesString = string.Join(Environment.NewLine + new String('-', 100), responses);
 
             // Finally, use the File class to write the HTML content of the sites to a file with a given name asynchronously
-            //File.WriteAllTextAsync(filename, responsesString);
+            await System.IO.File.WriteAllTextAsync(filename, responsesString);
         }
 
     }

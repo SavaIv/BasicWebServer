@@ -39,7 +39,7 @@ namespace BasicWebServer.Demo
         {
             // Напрактика още със стартирането на сървъра се изпълнява този метод т.е. изтегля си информация от 
             // двата сайта и се "напълва" File
-            //await DownloadSitesAsTextFile(Startup.FileName,
+            // await DownloadSitesAsTextFile(Startup.FileName,
             //    new string[] { "https://judge.softuni.org/", "https://softuni.org/" });
 
             var server = new HttpServer(routes => routes
@@ -49,12 +49,12 @@ namespace BasicWebServer.Demo
                 .MapPost<HomeController>("/HTML", c => c.HtmlFromPost())
                 .MapGet<HomeController>("/Content", c => c.Content())
                 .MapPost<HomeController>("/Content", c => c.DownloadContent())
-                .MapGet<HomeController>("/Cookies", c => c.Cookies()));
-            //.MapGet<HomeController>("/Session", c => c.Session()))
-            ////.MapGet<HomeController>("/Login", new HtmlResponse(Startup.LoginForm))
-            ////.MapPost<HomeController>("/Login", new HtmlResponse("", Startup.LoginAction))
-            ////.MapGet<HomeController>("/Logout", new HtmlResponse("", Startup.LogoutAction))
-            ////.MapGet<HomeController>("/UserProfile", new HtmlResponse("", Startup.GetUserDataAction)))
+                .MapGet<HomeController>("/Cookies", c => c.Cookies())
+                .MapGet<HomeController>("/Session", c => c.Session())
+                .MapGet<UsersController>("/Login", c => c.Login())
+                .MapPost<UsersController>("/Login", c => c.LogInUser())
+                .MapGet<UsersController>("/Logout", c => c.Logout())
+                .MapGet<UsersController>("/UserProfile", c => c.GetUserData()));
 
             await server.Start();   
         }
