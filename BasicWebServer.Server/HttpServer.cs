@@ -93,19 +93,7 @@ namespace BasicWebServer.Server
 
                     // мап-ваме ресонса с routing table-a 
                     var response = this.routingTable.MatchRequest(request);
-
-                    // ако респонса съдържа pre-render action той ще бъде изпълнен преди да бъде върнат към клиента
-                    // т.е. след като респонса е вече готов -> може да искаме да добавим нещо допълнително към респонса
-                    // Виж Routong таблицата (в Startup.cs) -> Напрактика втория параметър в скобите е именно пре-рендър
-                    // това са екшъните -> виж видeото на Стамо, първия WorkShop 0:55:40
-                    // Напрактика рутинг таблицата е "проста" - винаги връща празен стринг "", а с някой екшън ние 
-                    // правим конкретната работа - тези екшъни са т.н. pre-renders
-                    // Execute pre-render action for the response
-                    // виж пропъртито public Action<Request, Response> PreRenderAction { get; protected set; }
-                    // в класа response
-                    if (response.PreRenderAction != null)
-                        response.PreRenderAction(request, response);
-
+                                      
                     // the session should be part of each response to the browser, затова:
                     AddSession(request, response);
 
