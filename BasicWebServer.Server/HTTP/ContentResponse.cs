@@ -7,8 +7,7 @@ namespace BasicWebServer.Server.HTTP
     {
         // имаме accept the action through the constructor as an optional parameter -> Action<Request, Response> preRenderAction = null
         // в контекста на FORM - да можем да проеним респонса
-        public ContentResponse(string content, string contentType,
-            Action<Request, Response> preRenderAction = null)
+        public ContentResponse(string content, string contentType, Action<Request, Response> preRenderAction = null)
             : base(StatusCode.OK)
         {
             Guard.AgainstNull(content);

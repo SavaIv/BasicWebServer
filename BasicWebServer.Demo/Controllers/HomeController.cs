@@ -36,6 +36,8 @@ namespace BasicWebServer.Demo.Controllers
         {
             string formData = string.Empty;
 
+            // Form е Dictionary в Request класа, което се получва от ParseForm метода в същия клас - в Dictionary-то има
+            // двоки ключ-стойност, където са записани информацията от ФОРМ-ата
             foreach (var (key, value) in Request.Form)
             {
                 formData += $"{key} - {value}";
@@ -84,7 +86,7 @@ namespace BasicWebServer.Demo.Controllers
         public Response Session()
         {
             string CurrentDateKey = "CurrentDate";
-            var sessionExists = Request.Session.ContainsKey(CurrentDateKey);
+            bool sessionExists = Request.Session.ContainsKey(CurrentDateKey);
                
             if (sessionExists)
             {
@@ -145,7 +147,7 @@ namespace BasicWebServer.Demo.Controllers
             var responsesString = string.Join(Environment.NewLine + new String('-', 100), responses);
 
             // Finally, use the File class to write the HTML content of the sites to a file with a given name asynchronously
-            await System.IO.File.WriteAllTextAsync(filename, responsesString);
+            System.IO.File.WriteAllTextAsync(filename, responsesString);
         }
 
     }

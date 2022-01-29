@@ -15,7 +15,7 @@ namespace BasicWebServer.Server.Controllers
         // този Extension клас трябва да е публичен и статични 
 
         // метода е generic, a конкретно защо е TController - с цел яснота (да знаем за какво става дума)
-        // първия параметър на този метод ще е this КласаКойтоЕкстендваме (в случея е интерфейса, но хайде да не издебняваме)
+        // първия параметър на този метод ще е this КласаКойтоЕкстендваме (в случея е интерфейса)
         public static IRoutingTable MapGet<TController>(
             this IRoutingTable routingTable, string path, Func<TController, Response> controllerFunction)
             where TController : Controller
