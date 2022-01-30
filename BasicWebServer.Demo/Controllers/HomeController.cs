@@ -7,20 +7,21 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Web;
+using BasicWebServer.Demo.Models;
 
 namespace BasicWebServer.Demo.Controllers
 {
     public class HomeController : Controller
     {
-        private const string HtmlForm = @"<form action='/HTML' method='POST'>
-            Name: <input type='text' name='Name'/>
-            Age: <input type='number' name ='Age'/>
-            <input type='submit' value ='Save' />
-        </form>";
+        //private const string HtmlForm = @"<form action='/HTML' method='POST'>
+        //    Name: <input type='text' name='Name'/>
+        //    Age: <input type='number' name ='Age'/>
+        //    <input type='submit' value ='Save' />
+        //</form>";
 
-        private const string DownloadForm = @"<form action='/Content' method='POST'>
-            <input type='submit' value ='Download Sites Content' /> 
-        </form>";
+        //private const string DownloadForm = @"<form action='/Content' method='POST'>
+        //    <input type='submit' value ='Download Sites Content' /> 
+        //</form>";
 
         private const string FileName = "content.txt";
 
@@ -31,22 +32,33 @@ namespace BasicWebServer.Demo.Controllers
         // .MapGet("/", new TextResponse("Hello from the server!"))
         public Response Index() => Text("Hello from the server!");
         public Response Redirect() => Redirect("https://softuni.org");
-        public Response Html() => Html(HomeController.HtmlForm);
+        public Response Html() => View();
         public Response HtmlFromPost()
         {
-            string formData = string.Empty;
+            //string formData = string.Empty;
 
-            // Form е Dictionary в Request класа, което се получва от ParseForm метода в същия клас - в Dictionary-то има
-            // двоки ключ-стойност, където са записани информацията от ФОРМ-ата
-            foreach (var (key, value) in Request.Form)
+            //// Form е Dictionary в Request класа, което се получва от ParseForm метода в същия клас - в Dictionary-то има
+            //// двоки ключ-стойност, където са записани информацията от ФОРМ-ата
+            //foreach (var (key, value) in Request.Form)
+            //{
+            //    formData += $"{key} - {value}";
+            //    formData += Environment.NewLine;
+            //}
+
+            //return Text(formData);
+
+            var name = Request.Form["Name"];
+            var age = Request.Form["Age"];
+
+            var model = new FormViewModel()
             {
-                formData += $"{key} - {value}";
-                formData += Environment.NewLine;
-            }
+                Name = name,
+                Age = int.Parse(age)
+            };
 
-            return Text(formData);
+            return View(model);
         }
-        public Response Content() => Html(HomeController.DownloadForm);
+        public Response Content() => View();
         public Response DownloadContent()
         {
             DownloadSitesAsTextFile(

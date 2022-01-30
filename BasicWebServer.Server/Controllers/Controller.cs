@@ -39,8 +39,8 @@ namespace BasicWebServer.Server.Controllers
         protected Response Redirect(string location) => new RedirectResponse(location);
         protected Response File(string fileName) => new TextFileResponse(fileName);
 
-        // модификация на контролера за да може да връща вю. Ще има малко рефлекшън.
-        // за да можем да си свършим работата ни е нужно имато на вюто - имаме един атрибут: [CallerMemberName], който
+        // модификация на контролера за да може да връща вю. Има малко рефлекшън.
+        // За да можем да си свършим работата ни е нужно името на вюто - имаме един атрибут: [CallerMemberName], който
         // ни помага да вземем кой е извикал съответния метод т.е. "от кой метод е бил извикан този метод". Понеже имената
         // на вютата и екшъните съвпадат (такава е конвенцията) т.е. ще търсим такива вюта, които съвпадат със съответния
         // контролер. Обаче имаме малък проблем - ще трябва да се "поизчистят" имената където има "controller" т.е. трябва ни
@@ -54,6 +54,10 @@ namespace BasicWebServer.Server.Controllers
         // в случея атрибута каза на компилатора от къде да си вземе това, което му трябва.
         protected Response View([CallerMemberName] string viewName = "")
             => new ViewResponse(viewName, GetControllerName()); // <-- ще се създаде нов ViewResponse
+
+        // този overload на View ще позволи то да получава model (object model)
+        protected Response View(object model, [CallerMemberName] string viewName = "")
+            => new ViewResponse(viewName, GetControllerName(), model);
 
         // това е метода, който маха "controller" името на контролера:
         // По повод на контролера -> типа на нашия клас ще е някой от наследниците - примерно HomeController или UsersController
