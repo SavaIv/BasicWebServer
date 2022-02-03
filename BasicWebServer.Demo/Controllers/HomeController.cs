@@ -33,7 +33,7 @@ namespace BasicWebServer.Demo.Controllers
         public Response Index() => Text("Hello from the server!");
         public Response Redirect() => Redirect("https://softuni.org");
         public Response Html() => View();
-        public Response HtmlFromPost()
+        public Response HtmlFormPost()
         {
             //string formData = string.Empty;
 
@@ -99,7 +99,8 @@ namespace BasicWebServer.Demo.Controllers
         {
             string CurrentDateKey = "CurrentDate";
             bool sessionExists = Request.Session.ContainsKey(CurrentDateKey);
-               
+            // рекуест съдържа сесия. тази сесия е четем от еднo куки (виж в клас Request -> var session = GetSession(cookies);)
+            
             if (sessionExists)
             {
                 var currentDate = Request.Session[CurrentDateKey];

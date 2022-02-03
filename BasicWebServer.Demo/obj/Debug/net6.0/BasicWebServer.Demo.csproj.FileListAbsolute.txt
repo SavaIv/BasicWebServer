@@ -37,4 +37,4 @@ C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Demo\obj\Debu
 C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Demo\bin\Debug\net6.0\Views\Home\Content.cshtml
 C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Demo\bin\Debug\net6.0\Views\Home\Html.cshtml
 C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Demo\bin\Debug\net6.0\Views\Users\Login.cshtml
-C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Demo\bin\Debug\net6.0\Views\Home\HtmlFromPost.cshtml
+C:\Users\Lenovo_G580_i5\source\repos\BasicWebServer\BasicWebServer.Demo\bin\Debug\net6.0\Views\Home\HtmlFormPost.cshtml
