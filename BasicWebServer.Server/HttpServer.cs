@@ -146,8 +146,7 @@ namespace BasicWebServer.Server
             return requestBuilder.ToString();
         }
 
-        private async Task WriteResponse(
-            NetworkStream networkStream, Response response)
+        private async Task WriteResponse(NetworkStream networkStream, Response response)
         {
             var responseBytes = Encoding.UTF8.GetBytes(response.ToString());
 

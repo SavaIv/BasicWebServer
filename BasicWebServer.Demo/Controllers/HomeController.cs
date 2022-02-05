@@ -99,7 +99,7 @@ namespace BasicWebServer.Demo.Controllers
         {
             string CurrentDateKey = "CurrentDate";
             bool sessionExists = Request.Session.ContainsKey(CurrentDateKey);
-            // рекуест съдържа сесия. тази сесия е четем от еднo куки (виж в клас Request -> var session = GetSession(cookies);)
+            // рекуест съдържа сесия. тази сесия я четем от еднo куки (виж в клас Request -> var session = GetSession(cookies);)
             
             if (sessionExists)
             {
