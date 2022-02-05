@@ -1,4 +1,5 @@
-﻿using BasicWebServer.Server.HTTP;
+﻿using BasicWebServer.Server.Common;
+using BasicWebServer.Server.HTTP;
 using BasicWebServer.Server.Routing;
 using System.Net;
 using System.Net.Sockets;
@@ -14,6 +15,14 @@ namespace BasicWebServer.Server
 
         private readonly RoutingTable routingTable;
 
+        // TOВА Е НАШИЯ inversion Of Control Kонтейнер (от BasicWebServer.Server/Common/ServiceCollection)
+        // това го има и в класа Request (като пропърти).
+        public readonly IServiceCollection ServiceCollection;
+        // ще добавяме някакви сървисчета в startup-a (ще ги чейнваме при създаването на new HttpServer). т.е. на същото
+        // място, където настройвахме съответните рутове (най в началото) ще настройваме и serviceCollection
+        // в края на крайщата този serviceCollection трабва да стигне до Request класа (където трабва да го имаме)
+        // виж в метода Parse на Request класа (там е подаден)
+
         public HttpServer (string ipAddress, int port, Action<IRoutingTable> routingTableConfiguration)
         {
             this.ipAddress = IPAddress.Parse(ipAddress);
@@ -22,6 +31,7 @@ namespace BasicWebServer.Server
             this.serverListener = new TcpListener(this.ipAddress, this.port);
 
             routingTableConfiguration(this.routingTable = new RoutingTable());
+            ServiceCollection = new ServiceCollection();
         }
 
         public HttpServer(int port, Action<IRoutingTable> routingTable)
@@ -88,8 +98,8 @@ namespace BasicWebServer.Server
 
                     Console.WriteLine(requestText);
 
-                    // парсваме си рикуеста
-                    var request = Request.Parse(requestText);
+                    // парсваме си рикуеста + подаваме и serviceCollection
+                    var request = Request.Parse(requestText, ServiceCollection);
 
                     // мап-ваме ресонса с routing table-a 
                     var response = this.routingTable.MatchRequest(request);

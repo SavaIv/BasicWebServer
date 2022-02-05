@@ -3,6 +3,7 @@ using BasicWebServer.Server.Routing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -71,5 +72,27 @@ namespace BasicWebServer.Server.Controllers
         // НАПРАКТИ: Този метод по-долу, превръща делгата Func<TController, Response> в делгата Func<Request, Response>
         private static TController CreateController<TController>(Request request)
             => (TController)Activator.CreateInstance(typeof(TController), new[] { request });
+
+        // имаме нужда от метод който да ни върши работа за serviceCollection-а
+        private static Controller CreateController(Type controllerType, Request request)
+        {
+            // правим си инстанция на контрилера, като инстанцията я вземаме от нашия inversion Of Control Kонтейнер
+            // който се намира в                .ServiceCollection
+            var controller = (Controller)Request.ServiceCollection.CreateInstance(controllerType);
+            // използваме метода, който си създадохме за да направим инстанцията на контролера
+            // сега имаме проблем - знаем, че контролера очаква Request, a в дадения случай, CreateInstance ще инстанцира
+            // Рекуеста вместо нас т.е. ще инстанцира някакъв празен Рекуест (което не е ОК). За целта:
+            // ние знаем типа на контроилера и ще се опитаме да си вземем рекуеста
+            controllerType
+                .GetProperty("Request", BindingFlags.Instance | BindingFlags.NonPublic) // bindingFlags са bit флагове
+                .SetValue(controller, request);                                         // битовото или "|" промяня стойности
+            // с горния код, инстанцирахме конролера, но след това намерихме вътре пропъртито Рекуест и му заместихме 
+            // стойността, защото иначе няма да е вярна
+
+            return controller;
+            // вече, ако в някой от контролерите, в конструкторите им, бъде добавен сървис -> то той ще бъдат автоматично 
+            // инстанциран -> съответно този сървис трябва да бъде описан.
+        }
+
     }
 }

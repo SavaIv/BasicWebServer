@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using BasicWebServer.Server.Common;
+using System.Linq;
 using System.Web;
 
 namespace BasicWebServer.Server.HTTP
@@ -24,8 +25,17 @@ namespace BasicWebServer.Server.HTTP
         // for the name and value of each form field
         public IReadOnlyDictionary<string, string> Form { get; private set; }
 
-        public static Request Parse(string request)
+        // TOВА Е НАШИЯ inversion Of Control Kонтейнер (от BasicWebServer.Server/Common/ServiceCollection)
+        // по принцип този ServiceCollection трябва да дойде от някъде и ние някак си да го настроим -> за тази цел, този
+        // същия ServiceCollection ще го добавим на още едно място - в нашия HttpServer
+        // static e за да може във всеки рекуест да е едно и също!
+        public static IServiceCollection ServiceCollection { get; private set; }
+
+        public static Request Parse(string request, IServiceCollection serviceCollection)
         {
+            // ето така в рекуеста имаме сървис колекшън
+            ServiceCollection = serviceCollection;
+
             var lines = request.Split("\r\n");
 
             var startLine = lines.First().Split(" ");
@@ -40,7 +50,7 @@ namespace BasicWebServer.Server.HTTP
 
             // трябва ни сесията
             var session = GetSession(cookies);
-
+            
             var bodyLines = lines.Skip(headers.Count + 2).ToArray();
 
             var body = string.Join("\r\n", bodyLines);
