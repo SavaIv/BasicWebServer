@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Web;
 using BasicWebServer.Demo.Models;
+using BasicWebServer.Server.Attributes;
 
 namespace BasicWebServer.Demo.Controllers
 {
@@ -31,8 +32,13 @@ namespace BasicWebServer.Demo.Controllers
 
         // .MapGet("/", new TextResponse("Hello from the server!"))
         public Response Index() => Text("Hello from the server!");
+
         public Response Redirect() => Redirect("https://softuni.org");
+
+        [HttpGet]  // този атрибут може да го слагаме, може и да не го слагаме (по подразбиране ако няма атрибут е ГЕТ)
         public Response Html() => View();
+
+        [HttpPost]   // това е атрибутa, който си направихме HttpPostAttribute. По конженция може да не изписваме "Attribute"
         public Response HtmlFormPost()
         {
             //string formData = string.Empty;
@@ -58,7 +64,9 @@ namespace BasicWebServer.Demo.Controllers
 
             return View(model);
         }
+        
         public Response Content() => View();
+        
         public Response DownloadContent()
         {
             DownloadSitesAsTextFile(
@@ -68,6 +76,7 @@ namespace BasicWebServer.Demo.Controllers
 
             return File(HomeController.FileName);
         }
+        
         public Response Cookies()
         {
             if (Request.Cookies.Any(c => c.Name != BasicWebServer.Server.HTTP.Session.SessionCookieName))
@@ -95,6 +104,7 @@ namespace BasicWebServer.Demo.Controllers
             
             return Html("<h1>Cookies set!</h1>", cookies);            
         }
+        
         public Response Session()
         {
             string CurrentDateKey = "CurrentDate";

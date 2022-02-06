@@ -1,4 +1,5 @@
-﻿using BasicWebServer.Server.HTTP;
+﻿using BasicWebServer.Server.Attributes;
+using BasicWebServer.Server.HTTP;
 using BasicWebServer.Server.Routing;
 using System;
 using System.Collections.Generic;
@@ -60,6 +61,88 @@ namespace BasicWebServer.Server.Controllers
             where TController : Controller
         => routingTable.MapPost(path, request => controllerFunction(CreateController<TController>(request)));
 
+        // във връзка Data Binding-а правим този метод
+        public static IRoutingTable MapControllers(this RoutingTable routingTable)
+        {
+            // Трябва да си вземем екшъните (нашите рутинги - зависят от въпросните екшъни)
+            IEnumerable<MethodInfo> controllerActions = GetControllerActions();
+
+            foreach (var controllerAction in controllerActions)
+            {
+                // трябват ни името на контролера и името на екшъна за да можем да ги "извадим"
+                string controllerName = controllerAction.DeclaringType
+                                                        .Name       // името на контролреа (класа) ще е с "controller" накрая
+                                                        .Replace(nameof(Controller), string.Empty);
+                
+                string actionName = controllerAction.Name;
+
+                // след като имаме контролера и екшъна - можем да си сглобим пътя. Той ще ни е необходим за рутинг таблицата.
+                string path = $"/{controllerName}/{actionName}";
+
+                // трябва ни и респонс функцията, която да добавим отзад в МАП-а (която получава рекуест и връща респонс)
+                var responseFunction = GetResponseFunction(controllerAction);
+
+                // опитваме се да си мапнем таблицата. Kакво ни е нужно за таблицата? - трябва ни пътя, трябва ни verb-a
+                // и ни трябва responseFunction-a.
+                Method httpMethod = Method.Get;  // това е метод по подразбиране!!!
+
+                // вземаме си къстъм атрибута (който си направихме)
+                var actionMethodAttribute = controllerAction.GetCustomAttribute<HttpMethodAttribute>();
+
+                // трябва да проверим дали съществува такъв атрибут (ако е нулл - ще си остане стойността по подразбиран)
+                if (actionMethodAttribute != null)
+                {
+                    httpMethod = actionMethodAttribute.HttpMethod;
+                }
+
+                // трябва да мапнем
+                routingTable.Map(httpMethod, path, responseFunction);
+            }
+
+            return routingTable;
+        }
+
+        //
+        private static Func<Request, Response> GetResponseFunction(MethodInfo controllerAction)
+            // трябва да върнем Func<Request, Response>. "=>" е ретърн т.е. казваме => и започваме да си правим Funk-a
+            => request =>
+            // т.е. връщаме нова функция, която получава рекуест... и започва да прави нещо:
+        {
+            // Трябва да си създадем инстанция на нашия контролер - ще ни е нужна за да може да намерим функцията
+            var controllerInstance = CreateController(controllerAction.DeclaringType, request);
+
+            // Трябва да намерин всички параметри на нашия екшън (ЕТО ТУК Е ПРОБЛЕМА, ЕТО ЗАТОВА ПИШЕМ ТОЗИ ЦЕЛИЯ ЗАСУКАН КОД
+            // за да може на екшъните да подаваме параметри. Съответно да вземаме тези параметри отнякъде т.е. да се получи
+            // data binding --> dat-та, която е в рекуеста да се bind-не към самия екшън. Това беше целта -> да може на
+            // екшъните да подаваме параметри и съответно да вземаме от някъде тези параметри. Това е най-трудната част
+            var parameterValues = GetParameterValues(controllerAction, request);
+            // след това ще се опитаме да върнем резултат. Резултата, който ще върнем след като върнем параметрите ще е:
+            return (Response)controllerAction.Invoke(controllerInstance, parameterValues);
+            // т.е. резултата на нашата функция ще бъде изпълнението на този метод:
+            // (Response)controllerAction.Invoke(controllerInstance, parameterValues);
+            // -> изпълняваме controllerAction-а, като трябва да подадем инстанция, върху която го изпълняваме - инстанцията
+            // е: controllerInstanc. И параметрите с които го изплняваме: parameterValues
+        };
+
+
+
+
+
+        // целта е да вземем само контолерите -> от тях трябва да вземем екшъните
+        private static IEnumerable<MethodInfo> GetControllerActions() // можем да полазваме LINQ и директно да върнем стойност
+             => Assembly            // <- това ни дава възможност да работим деректно с рефлекшън
+            .GetEntryAssembly()     // <- вземаме стартиращото асембли (асемблито, което е започнало)
+            .GetExportedTypes()     // <- Вземаме негпвите типове. GetExportedTypes защото вземаме само публичните типове
+            .Where(t => t.IsAbstract == false)   // филтрираме за да сме сигурни, че вземаме само контролерите. Типа трябва да не е абстрактен
+            .Where(t => t.IsAssignableTo(typeof(Controller))) // трябва да наследява типа контролер
+            .Where(t => t.Name.EndsWith(nameof(Controller))) // където името дали завършва на "Controller"
+             // до тук вземахме (само) контролерите. сега от тях трябва да вземем всички екшъни ще ползваме SelectMany, 
+            .SelectMany(t => t
+                .GetMethods(BindingFlags.Instance | BindingFlags.Public)  //  където казаваме "Дай ми всички методи",
+                .Where(m => m.ReturnType.IsAssignableTo(typeof(Response)))  
+                 // искаме да вземем само екшъните, защото може може да сме захапали и някой друг публичен инстанционен метод
+            ).ToList();
+
         // какво връща функцията по-долу:
         // първо кастваме към (ТController). След което ползваме едно нещо, което се казва Activator (.CreateInstance)
         // Нашия клас Controller (виж BasicWebServer.Server/Controllers/Controller) няма празен конструктор, т.е.трябва да извикаме
@@ -93,6 +176,5 @@ namespace BasicWebServer.Server.Controllers
             // вече, ако в някой от контролерите, в конструкторите им, бъде добавен сървис -> то той ще бъдат автоматично 
             // инстанциран -> съответно този сървис трябва да бъде описан.
         }
-
     }
 }

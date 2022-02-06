@@ -24,6 +24,7 @@ namespace BasicWebServer.Server.HTTP
         // this is a field for the form data, which should be a dictionary holding key-value pairs
         // for the name and value of each form field
         public IReadOnlyDictionary<string, string> Form { get; private set; }
+        public IReadOnlyDictionary<string, string> Query { get; private set; }
 
         // TOВА Е НАШИЯ inversion Of Control Kонтейнер (от BasicWebServer.Server/Common/ServiceCollection)
         // по принцип този ServiceCollection трябва да дойде от някъде и ние някак си да го настроим -> за тази цел, този
@@ -41,7 +42,10 @@ namespace BasicWebServer.Server.HTTP
             var startLine = lines.First().Split(" ");
 
             var method = ParseMethod(startLine[0]);
-            var url = startLine[1];
+
+            // във връзка с нуждата да вземем query стринга от url-то правим промяна в този ред
+            // var url = startLine[1];  <-- който вече ще изглежда така: ще ни бъдат върнати две неща (това е Tuple)
+            (string url, Dictionary<string, string> query) = ParseUrl(startLine[1]);
 
             var headers = ParseHeaders(lines.Skip(1));
 
@@ -65,8 +69,42 @@ namespace BasicWebServer.Server.HTTP
                 Cookies = cookies,
                 Body = body,
                 Session = session,
-                Form = form
+                Form = form,
+                Query = query
             };
+        }
+
+        private static (string url, Dictionary<string, string> query) ParseUrl(string queryString)
+        {
+            string url = string.Empty;
+            Dictionary<string, string> query = new Dictionary<string, string>();
+
+            // целта е да сплитнем по "?" за да може да вземем query string-a
+            var parts = queryString.Split("?", 2); // кострентваме го до 2 (ако има още въпросителни => някой се бъзика)
+
+            if (parts.Length == 1)  // т.е. не се е сплитнало нищо (имаме само един резултат)
+            {
+                url = parts[0];
+            }
+            else
+            {
+                // ? трябва да го има това
+                url = parts[0];
+
+                var queryParams = parts[1].Split("&");
+
+                foreach (var pair in queryParams)
+                {
+                    var param = pair.Split('=');
+                    if (param.Length == 2)
+                    {
+                        query.Add(param[0], param[1]); 
+
+                    }
+                }
+            }
+
+            return (url, query);
         }
 
         private static Session GetSession(CookieCollection cookies)
