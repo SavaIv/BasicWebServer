@@ -31,25 +31,27 @@ namespace BasicWebServer.Demo
             //    да направим този чейнинг по-долу.
             // Чеининга не е задължителен. В смисъл, че ако Мар метода невръща return this; - най-накрая в кода си, ние пак
             // можем да напълним дикшинърито на routingTable ето така:
-                        //new HttpServer(routes =>
-                        //{
-                        //    routes.MapGet<HomeController>("/", c => c.Index());
-                        //    routes.MapGet<HomeController>("/Redirect", c => c.Redirect());
-                        //});
+            //new HttpServer(routes =>
+            //{
+            //    routes.MapGet<HomeController>("/", c => c.Index());
+            //    routes.MapGet<HomeController>("/Redirect", c => c.Redirect());
+            //});
 
             var server = new HttpServer(routes => routes
-                .MapGet<HomeController>("/", c => c.Index())  // връщаме съответен екшън, за целта се ползва се делегат
-                .MapGet<HomeController>("/Redirect", c => c.Redirect())
-                .MapGet<HomeController>("/HTML", c => c.Html())
-                .MapPost<HomeController>("/HTML", c => c.HtmlFormPost())
-                .MapGet<HomeController>("/Content", c => c.Content())
-                .MapPost<HomeController>("/Content", c => c.DownloadContent())
-                .MapGet<HomeController>("/Cookies", c => c.Cookies())
-                .MapGet<HomeController>("/Session", c => c.Session())
-                .MapGet<UsersController>("/Login", c => c.Login())
-                .MapPost<UsersController>("/Login", c => c.LogInUser())
-                .MapGet<UsersController>("/Logout", c => c.Logout())
-                .MapGet<UsersController>("/UserProfile", c => c.GetUserData()));
+            //    .MapGet<HomeController>("/", c => c.Index())  // връщаме съответен екшън, за целта се ползва се делегат
+            //    .MapGet<HomeController>("/Redirect", c => c.Redirect())
+            //    .MapGet<HomeController>("/HTML", c => c.Html())
+            //    .MapPost<HomeController>("/HTML", c => c.HtmlFormPost())
+            //    .MapGet<HomeController>("/Content", c => c.Content())
+            //    .MapPost<HomeController>("/Content", c => c.DownloadContent())
+            //    .MapGet<HomeController>("/Cookies", c => c.Cookies())
+            //    .MapGet<HomeController>("/Session", c => c.Session())
+            //    .MapGet<UsersController>("/Login", c => c.Login())
+            //    .MapPost<UsersController>("/Login", c => c.LogInUser())
+            //    .MapGet<UsersController>("/Logout", c => c.Logout())
+            //    .MapGet<UsersController>("/UserProfile", c => c.GetUserData()));
+            .MapControllers());
+
 
             await server.Start();
         }

@@ -82,15 +82,8 @@ namespace BasicWebServer.Server.HTTP
             // целта е да сплитнем по "?" за да може да вземем query string-a
             var parts = queryString.Split("?", 2); // кострентваме го до 2 (ако има още въпросителни => някой се бъзика)
 
-            if (parts.Length == 1)  // т.е. не се е сплитнало нищо (имаме само един резултат)
+            if (parts.Length > 1)  // т.е. не се е сплитнало нищо (имаме само един резултат)
             {
-                url = parts[0];
-            }
-            else
-            {
-                // ? трябва да го има това
-                url = parts[0];
-
                 var queryParams = parts[1].Split("&");
 
                 foreach (var pair in queryParams)
@@ -103,6 +96,8 @@ namespace BasicWebServer.Server.HTTP
                     }
                 }
             }
+
+            url = parts[0];           
 
             return (url, query);
         }
@@ -215,5 +210,7 @@ namespace BasicWebServer.Server.HTTP
                 throw new InvalidOperationException($"Method '{method} is not supported.'");
             }
         }
+
+        
     }
 }

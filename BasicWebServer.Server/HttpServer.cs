@@ -101,7 +101,7 @@ namespace BasicWebServer.Server
                     // парсваме си рикуеста + подаваме и serviceCollection
                     var request = Request.Parse(requestText, ServiceCollection);
 
-                    // мап-ваме ресонса с routing table-a 
+                    // мап-ваме респонса с routing table-a 
                     var response = this.routingTable.MatchRequest(request);
                                       
                     // the session should be part of each response to the browser, затова:

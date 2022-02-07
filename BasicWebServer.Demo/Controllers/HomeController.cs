@@ -33,6 +33,8 @@ namespace BasicWebServer.Demo.Controllers
         // .MapGet("/", new TextResponse("Hello from the server!"))
         public Response Index() => Text("Hello from the server!");
 
+        public Response Student(string name, int age) => Text($"I'm {name} and I am {age} years old.");
+
         public Response Redirect() => Redirect("https://softuni.org");
 
         [HttpGet]  // този атрибут може да го слагаме, може и да не го слагаме (по подразбиране ако няма атрибут е ГЕТ)

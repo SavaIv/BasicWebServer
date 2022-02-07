@@ -62,7 +62,7 @@ namespace BasicWebServer.Server.Controllers
         => routingTable.MapPost(path, request => controllerFunction(CreateController<TController>(request)));
 
         // във връзка Data Binding-а правим този метод
-        public static IRoutingTable MapControllers(this RoutingTable routingTable)
+        public static IRoutingTable MapControllers(this IRoutingTable routingTable)
         {
             // Трябва да си вземем екшъните (нашите рутинги - зависят от въпросните екшъни)
             IEnumerable<MethodInfo> controllerActions = GetControllerActions();
@@ -105,7 +105,7 @@ namespace BasicWebServer.Server.Controllers
         //
         private static Func<Request, Response> GetResponseFunction(MethodInfo controllerAction)
             // трябва да върнем Func<Request, Response>. "=>" е ретърн т.е. казваме => и започваме да си правим Funk-a
-            => request =>
+        => request =>
             // т.е. връщаме нова функция, която получава рекуест... и започва да прави нещо:
         {
             // Трябва да си създадем инстанция на нашия контролер - ще ни е нужна за да може да намерим функцията
@@ -124,9 +124,76 @@ namespace BasicWebServer.Server.Controllers
             // е: controllerInstanc. И параметрите с които го изплняваме: parameterValues
         };
 
+        private static object[] GetParameterValues(MethodInfo controllerAction, Request request)
+        {
+            // целта е да вземем оbject[] масив от обекти
+            // 1. ще вземем всички параметри на екшъна за да можем да им намерим value-тата
+            var actionParameters = controllerAction.GetParameters()
+            // това, че сме взели параметрите като parameterInfo, ни ни грее много, защото те не ни трябват като parameterInfo
+            // (това, което ще получим от горния ред код). Затова parameterInfo-то ще селектнем нов анонимен (щото сме мързеливи) обект:
+            .Select(p => new
+            {
+                p.Name,
+                p.ParameterType
+            })
+            .ToArray();
 
+            // Вече имеме actionParameters -> масив от name и parameterType <- какво правим с тях?
+            // 2. ще си направим това, което смятаме да връщаме --> което е масив от parameter values
+            var parameterValues = new object[actionParameters.Length];
 
+            // ще трябва да превъртим параметрите - и ще попълваме value-тата
+            for (int i = 0; i < actionParameters.Length; i++)
+            {
+                // първо трябва да провериме типа. Когато говорим за Data Binding - имаме два варианта 
+                // единия вариянт е да е някакъв прост тип - тогава байндваме директно 
+                // обаче ако става дума за клас - ние ще трябва да инстанцираме този клас и да Баинднем всеки един негов параметър
+                // ще разгледаме двата случея - единия, когато имаме прост тип, и по-сложния вариянт
+                var parameter = actionParameters[i];
 
+                // проверяваме типа
+                if (parameter.ParameterType.IsPrimitive 
+                    || parameter.ParameterType == typeof(string))  // ако имаме прост тип или стринг - директно го asign-ваме
+                {
+                    string parameterValue = request.GetValue(parameter.Name);
+                    // записваме го в реалния тип на екшън параметъра
+                    parameterValues[i] = Convert.ChangeType(parameterValues, parameter.ParameterType);
+                    // ChangeType очаква да види самата стойност и към какво да я конвертира - след което я записва в масива parameterValues
+                }
+                else  // ако параметъра не е примитивен тип - нещата са малко по-сложни и ще трябва да поработим малко
+                {
+                    // налага се да си създадем съответната инстанция на параметъра (защото той не е прост тип)
+                    var parameterValue = Activator.CreateInstance(parameter.ParameterType);
+
+                    // след като сме си създали инстанцията ще трябва да вземем всичките параметри (пропъртита) на Параметъра
+                    // който инстанцирахме на горния ред код. Звучи тъпо "вземаме параметрите на параметъра" :) - за това,
+                    // за да не звучи така ще кажем, че ще вземаме пропъртита (вместо параметри) за блгозвучие
+                    var parameterProperties = parameter.ParameterType.GetProperties();
+                    // Така вземаме всички пропъртита.
+                    
+                    // Сега трябва да им дадем стойности на пропъртитата -> в цикъл ще се опитаме да получим value-то:
+                    foreach (var property in parameterProperties)
+                    {
+                        // за всяко едно от пропъртитата - вземаме стойността на пропъртито
+                        var propertyValue = request.GetValue(property.Name);
+                        // после го сетваме така:
+                        property.SetValue(parameterValue, Convert.ChangeType(propertyValue, property.PropertyType));
+                        // където: parameterValue е инстанцията върху която го сетваме 
+                        // вземаме: propertyValue-то и PropertyType-а
+                    }
+
+                    // След като foreach-a премине - можем да добавим нашата инстанция т.е. propertyValue-то
+                    parameterValues[i] = parameterValue;
+                }
+            }
+
+            return parameterValues;
+        }
+
+        private static string GetValue(this Request request, string? name)
+            => request.Query.GetValueOrDefault(name) ?? request.Form.GetValueOrDefault(name);
+        // ако намери стойността от Query-то ще я върне, ако ли не -> ще пробва да вземе стойност от формата
+        // ако имаме едни и същи имена и във Формата и в Queri-то ... не е ОК (неправи такива неща)
 
         // целта е да вземем само контолерите -> от тях трябва да вземем екшъните
         private static IEnumerable<MethodInfo> GetControllerActions() // можем да полазваме LINQ и директно да върнем стойност
