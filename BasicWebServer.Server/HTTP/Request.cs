@@ -80,9 +80,9 @@ namespace BasicWebServer.Server.HTTP
             Dictionary<string, string> query = new Dictionary<string, string>();
 
             // целта е да сплитнем по "?" за да може да вземем query string-a
-            var parts = queryString.Split("?", 2); // кострентваме го до 2 (ако има още въпросителни => някой се бъзика)
+            var parts = queryString.Split("?", 2); // констрентваме го до 2 (ако има още въпросителни => някой се бъзика)
 
-            if (parts.Length > 1)  // т.е. не се е сплитнало нищо (имаме само един резултат)
+            if (parts.Length > 1)  // т.е. сплитнало се е нещо 
             {
                 var queryParams = parts[1].Split("&");
 

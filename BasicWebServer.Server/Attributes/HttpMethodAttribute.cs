@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 
 namespace BasicWebServer.Server.Attributes
 {
+    [AttributeUsage(AttributeTargets.Method)]
     public abstract class HttpMethodAttribute : Attribute
     {
-        public HttpMethodAttribute(Method httpMethod)
+        protected HttpMethodAttribute(Method httpMethod)
         {
             HttpMethod = httpMethod;
         }

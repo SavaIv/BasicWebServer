@@ -73,7 +73,7 @@ namespace BasicWebServer.Server.Controllers
                 string controllerName = controllerAction.DeclaringType
                                                         .Name       // името на контролреа (класа) ще е с "controller" накрая
                                                         .Replace(nameof(Controller), string.Empty);
-                
+
                 string actionName = controllerAction.Name;
 
                 // след като имаме контролера и екшъна - можем да си сглобим пътя. Той ще ни е необходим за рутинг таблицата.
@@ -104,25 +104,27 @@ namespace BasicWebServer.Server.Controllers
 
         //
         private static Func<Request, Response> GetResponseFunction(MethodInfo controllerAction)
-            // трябва да върнем Func<Request, Response>. "=>" е ретърн т.е. казваме => и започваме да си правим Funk-a
-        => request =>
-            // т.е. връщаме нова функция, която получава рекуест... и започва да прави нещо:
+        // трябва да върнем Func<Request, Response>. "=>" е ретърн т.е. казваме => и започваме да си правим Funk-a
         {
-            // Трябва да си създадем инстанция на нашия контролер - ще ни е нужна за да може да намерим функцията
-            var controllerInstance = CreateController(controllerAction.DeclaringType, request);
+            // т.е. връщаме нова функция, която получава рекуест... и ще върне респокнс (виж във вътрешните скоби по-долу):
+            return request =>
+            {
+                // Трябва да си създадем инстанция на нашия контролер - ще ни е нужна за да може да намерим функцията
+                var controllerInstance = CreateController(controllerAction.DeclaringType, request);
 
-            // Трябва да намерин всички параметри на нашия екшън (ЕТО ТУК Е ПРОБЛЕМА, ЕТО ЗАТОВА ПИШЕМ ТОЗИ ЦЕЛИЯ ЗАСУКАН КОД
-            // за да може на екшъните да подаваме параметри. Съответно да вземаме тези параметри отнякъде т.е. да се получи
-            // data binding --> dat-та, която е в рекуеста да се bind-не към самия екшън. Това беше целта -> да може на
-            // екшъните да подаваме параметри и съответно да вземаме от някъде тези параметри. Това е най-трудната част
-            var parameterValues = GetParameterValues(controllerAction, request);
-            // след това ще се опитаме да върнем резултат. Резултата, който ще върнем след като върнем параметрите ще е:
-            return (Response)controllerAction.Invoke(controllerInstance, parameterValues);
-            // т.е. резултата на нашата функция ще бъде изпълнението на този метод:
-            // (Response)controllerAction.Invoke(controllerInstance, parameterValues);
-            // -> изпълняваме controllerAction-а, като трябва да подадем инстанция, върху която го изпълняваме - инстанцията
-            // е: controllerInstanc. И параметрите с които го изплняваме: parameterValues
-        };
+                // Трябва да намерим всички параметри на нашия екшън <- ТОВА Е ПРОБЛЕМА! ЗАТОВА ПИШЕМ ТОЗИ ЦЕЛИЯ ЗАСУКАН КОД
+                // за да може на екшъните да подаваме параметри. Съответно да вземаме тези параметри отнякъде т.е. да се получи
+                // data binding --> datа-та, която е в рекуеста да се bind-не към самия екшън. Това беше целта -> да може на
+                // екшъните да подаваме параметри и съответно да вземаме от някъде тези параметри. Това е най-трудната част
+                var parameterValues = GetParameterValues(controllerAction, request);
+                // след това ще се опитаме да върнем резултат. Резултата, който ще върнем след като върнем параметрите ще е:
+                return (Response)controllerAction.Invoke(controllerInstance, parameterValues);
+                // т.е. резултата на нашата функция ще бъде изпълнението на този метод:
+                // (Response)controllerAction.Invoke(controllerInstance, parameterValues);
+                // -> изпълняваме controllerAction-а, като трябва да подадем инстанция, върху която го изпълняваме - инстанцията
+                // е: controllerInstanc. И параметрите с които го изплняваме: parameterValues
+            };
+        }
 
         private static object[] GetParameterValues(MethodInfo controllerAction, Request request)
         {
@@ -152,12 +154,12 @@ namespace BasicWebServer.Server.Controllers
                 var parameter = actionParameters[i];
 
                 // проверяваме типа
-                if (parameter.ParameterType.IsPrimitive 
-                    || parameter.ParameterType == typeof(string))  // ако имаме прост тип или стринг - директно го asign-ваме
+                if (parameter.ParameterType.IsPrimitive ||
+                    parameter.ParameterType == typeof(string))  // ако имаме прост тип или стринг - директно го asign-ваме
                 {
                     string parameterValue = request.GetValue(parameter.Name);
                     // записваме го в реалния тип на екшън параметъра
-                    parameterValues[i] = Convert.ChangeType(parameterValues, parameter.ParameterType);
+                    parameterValues[i] = Convert.ChangeType(parameterValue, parameter.ParameterType);
                     // ChangeType очаква да види самата стойност и към какво да я конвертира - след което я записва в масива parameterValues
                 }
                 else  // ако параметъра не е примитивен тип - нещата са малко по-сложни и ще трябва да поработим малко
@@ -170,7 +172,7 @@ namespace BasicWebServer.Server.Controllers
                     // за да не звучи така ще кажем, че ще вземаме пропъртита (вместо параметри) за блгозвучие
                     var parameterProperties = parameter.ParameterType.GetProperties();
                     // Така вземаме всички пропъртита.
-                    
+
                     // Сега трябва да им дадем стойности на пропъртитата -> в цикъл ще се опитаме да получим value-то:
                     foreach (var property in parameterProperties)
                     {
@@ -199,15 +201,15 @@ namespace BasicWebServer.Server.Controllers
         private static IEnumerable<MethodInfo> GetControllerActions() // можем да полазваме LINQ и директно да върнем стойност
              => Assembly            // <- това ни дава възможност да работим деректно с рефлекшън
             .GetEntryAssembly()     // <- вземаме стартиращото асембли (асемблито, което е започнало)
-            .GetExportedTypes()     // <- Вземаме негпвите типове. GetExportedTypes защото вземаме само публичните типове
+            .GetExportedTypes()     // <- Вземаме негoвите типове. GetExportedTypes защото вземаме само публичните типове
             .Where(t => t.IsAbstract == false)   // филтрираме за да сме сигурни, че вземаме само контролерите. Типа трябва да не е абстрактен
             .Where(t => t.IsAssignableTo(typeof(Controller))) // трябва да наследява типа контролер
             .Where(t => t.Name.EndsWith(nameof(Controller))) // където името дали завършва на "Controller"
-             // до тук вземахме (само) контролерите. сега от тях трябва да вземем всички екшъни ще ползваме SelectMany, 
+                                                             // до тук вземахме (само) контролерите. сега от тях трябва да вземем всички екшъни ще ползваме SelectMany, 
             .SelectMany(t => t
                 .GetMethods(BindingFlags.Instance | BindingFlags.Public)  //  където казаваме "Дай ми всички методи",
-                .Where(m => m.ReturnType.IsAssignableTo(typeof(Response)))  
-                 // искаме да вземем само екшъните, защото може може да сме захапали и някой друг публичен инстанционен метод
+                .Where(m => m.ReturnType.IsAssignableTo(typeof(Response)))
+            // искаме да вземем само екшъните, защото може може да сме захапали и някой друг публичен инстанционен метод
             ).ToList();
 
         // какво връща функцията по-долу:
@@ -237,7 +239,7 @@ namespace BasicWebServer.Server.Controllers
                 .GetProperty("Request", BindingFlags.Instance | BindingFlags.NonPublic) // bindingFlags са bit флагове
                 .SetValue(controller, request);                                         // битовото или "|" промяня стойности
             // с горния код, инстанцирахме конролера, но след това намерихме вътре пропъртито Рекуест и му заместихме 
-            // стойността, защото иначе няма да е вярна
+            // стойността, защото иначе тя няма да е вярна
 
             return controller;
             // вече, ако в някой от контролерите, в конструкторите им, бъде добавен сървис -> то той ще бъдат автоматично 

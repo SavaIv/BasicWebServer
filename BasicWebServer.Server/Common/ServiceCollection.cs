@@ -22,21 +22,21 @@ namespace BasicWebServer.Server.Common
             services = new Dictionary<Type, Type>();
         }
 
-        public IServiceCollection Add<TSercice, TImplementation>()
-            where TSercice : class
-            where TImplementation : TSercice
+        public IServiceCollection Add<TService, TImplementation>()
+            where TService : class
+            where TImplementation : TService
         {
             // ще добавим на typeof(TSercice) - typeof(TImplementation)
             // т.е. на този ключ ще имаме съответната стойност
-            services[typeof(TSercice)] = typeof(TImplementation);
+            services[typeof(TService)] = typeof(TImplementation);
 
             // за да можем да правим чейнинг - трябва да връщаме същия тип!!!
             return this;
         }
 
-        public IServiceCollection Add<TSercice>() where TSercice : class
+        public IServiceCollection Add<TService>() where TService : class
         {
-            return Add<TSercice, TSercice>();
+            return Add<TService, TService>();
             // използваме имплементациата на горния метод add
             // т.е. ако бъде подедено само едното -> в дикшинърито ще имаме едно и също за ключ и за стойност
             // т.е. така имаме конкретна инстанция без да я "вързваме" с някакъв интерфейс
@@ -47,7 +47,7 @@ namespace BasicWebServer.Server.Common
             // това, което следва да направим, минава малко за cheat, но пък ще ни спести много писане
             // на практика ние инстанцираме неща, който не само наши. когато ползваме dependency injection би било добре ако
             // ги има всички инстанции вътре в контейнера, но на практика не е така (има разни стандартни класове, които със
-            // сигурност ще ги збравим да ги добавим в контейнера (но те са депенденсита в нашата система)). затова 
+            // сигурност ще ги зaбравим да ги добавим в контейнера (но те са депенденсита в нашата система)). затова 
             // inversion Of control контейнер-a трябва да има възможност малко да cheat-не, когато не е ясно какво точно трябва
             // да се ползва- затова правим така:
             if (services.ContainsKey(serviceType))  // проверяваме дали съществува ключа (типа, който искаме да създадем)
@@ -60,12 +60,14 @@ namespace BasicWebServer.Server.Common
             // както казахме по-горе - имаме стандартни обекти, които все пак, не е лошо да могат да се инстъанцират без
             // да трябва да ги описваме в invertion of control контейнера
             else if (serviceType.IsInterface) // <-- ако нямаме такъв ключ, проверяваме дали е интерфейс. Това не трябва
-                                              // да е реален клас. Ако е интерфейс ние неможем да го инстанцираме.
+                                              // да е реален клас. Ако е интерфейс ние неможем да го инстанцираме.                                              
             {
                 throw new InvalidOperationException($"Service {serviceType.FullName} is not registerd!");
             }
-
-            // Вече няма значени дали това, което сме взели, идва от Дикшинърито или вземаме направо това, което е дошло
+            
+            // Ако имаме такъв ключ - на serviceType e присвоена някаква реална инстанция, също така,
+            // Ако нямаме такъв ключ и serviceType не е интрефейс - минаваме на вариянт директно да го инстанцираме
+            // т.е. няма значени дали това, което сме взели, идва от Дикшинърито или вземаме направо това, което е дошло
             // (и не е интерфейс), което е реална инстанция - можем да си го ползваме. Трабва да го инстанциране.
             // Въпроса е, че неможем просто CretaeInstance.Activator.Bla.Bla - защото трябва да намерим и неговите параметри
             // т.е. преди да го създадем, трябва да му създадем всички негови зависимости... усеща ли се рекурсията?
@@ -73,11 +75,12 @@ namespace BasicWebServer.Server.Common
             //   и ще се налага да се влиза "обхожда" много на дълбоко. - трябва да се обходи рекурсивно, защото реално имаме
             //   дърво - а дърветата се обхождат с рекурсия.
             var constructors = serviceType.GetConstructors();
+            
             // Тук има един малък проблем, когато се работи с dependency injection - inversion Of control контейнер-a няма как
             // сам да избере кой от овърлодите на конструкторите да ползва. Затова, при ползваме inversion Of control контейнер
             // ползваме един конструктор.
             // По принцип решенията са 1. Да се хвърли ексепшън, ако се срещне обект с повече от един конструктор и 2. да се
-            // взема винаги първия, като се подведят по броя на параметрите в конструкторите за да инстанцираме колкото се
+            // взема винаги първия, като се подредят по броя на параметрите в конструкторите за да инстанцираме колкото се
             // може по-малко. В тази връзка казваме:
             if (constructors.Length > 1)
             {
@@ -85,11 +88,11 @@ namespace BasicWebServer.Server.Common
             }
 
             // понеже constructors е колекция, трябва да си вземем конструктура с който ще работим. Вземаме първия конструктор
-            var constructor = constructors[0];
+            var constructor = constructors.First();
             // след това трябва да вземем всички параметри на този конструктор
             var parameterts = constructor.GetParameters();
-            // трябва да запазим стойностите на тези параметри. (когато се инстанцира с рефлекшън може да подадем един масив 
-            // object с параметри. Масива е голям колкото броя на параметрите - затова е [parameterts.Length]
+            // трябва да запазим стойностите на тези параметри. (когато се инстанцира с рефлекшън може да подадем
+            // един масив object с параметри. Масива е голям колкото броя на параметрите - затова е [parameterts.Length]
             var parameterValues = new object[parameterts.Length];
 
             for (int i = 0; i < parameterValues.Length; i++)
@@ -98,7 +101,7 @@ namespace BasicWebServer.Server.Common
                 var parameterType = parameterts[i].ParameterType;
                 // даваме стойност на въпросния параметър. Алгоритъма е рекурсивен => т.е. рекурсивно минаваме и ги създаваме
                 // всичките параметри
-                var parameterValue = CreateInstance(parameterType);
+                var parameterValue = CreateInstance(parameterType); // това ще влезе навътре в дървото
 
                 parameterValues[i] = parameterValue;
             }
@@ -125,10 +128,11 @@ namespace BasicWebServer.Server.Common
             }
 
             // ако го имаме -> ще трябва да създадем съответната имлементация
-            var servise = services[serviceType];
-            // създаването е така: !!! трябва да върнем TService, a нашия CreateInstance e object (за да може да върне
-            // абсолютно всичко)
-            return (TService)CreateInstance(servise);
+            var service = services[serviceType];
+
+            // създаването е така: !!! трябва да върнем TService, понеже нашия CreateInstance e object (за да може да върне
+            // абсолютно всичко) => правим едно кастване в началото към (TService)
+            return (TService)CreateInstance(service);
         }
     }
 }

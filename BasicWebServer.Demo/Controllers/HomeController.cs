@@ -31,6 +31,7 @@ namespace BasicWebServer.Demo.Controllers
         }
 
         // .MapGet("/", new TextResponse("Hello from the server!"))
+        [HttpGet]
         public Response Index() => Text("Hello from the server!");
 
         public Response Student(string name, int age) => Text($"I'm {name} and I am {age} years old.");
